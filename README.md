@@ -43,6 +43,22 @@ npm run dev
 | `npm run test` | Vitest |
 | `npm run db:migrate` | Prisma migrations |
 
+## Deploy (Vercel)
+
+1. **Import** the GitHub repo in Vercel (framework auto-detects Next.js;
+   `vercel.json` supplies the build command, which runs migrations).
+2. **Database**: add a Postgres store from the Vercel Marketplace (Neon).
+   It must support pgvector (Neon does). This sets `DATABASE_URL`.
+3. **Environment variables** (Project → Settings → Environment Variables):
+   - `AUTH_SECRET` — `openssl rand -base64 32`
+   - `CRON_SECRET` — any random string; protects the coach cron endpoint
+   - `CLAUDE_CODE_OAUTH_TOKEN` — optional; without it the app runs on the
+     clearly-labeled mock AI. Note the Agent SDK spawns a subprocess per
+     call, which is slow/fragile on serverless — a direct Anthropic API
+     provider (`ANTHROPIC_API_KEY`) is the intended production path.
+4. The overnight coach runs via Vercel Cron (`/api/cron/coach`, 6:00 UTC
+   daily). Locally, an in-process scheduler does the same job.
+
 ## Architecture (so far)
 
 ```

@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npx prisma migrate deploy && npm run build",
+  "crons": [
+    {
+      "path": "/api/cron/coach",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
