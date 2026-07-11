@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { CatPrompt } from "@/lib/prompts";
 import { getCatPromptAction } from "@/app/(app)/cat/actions";
 import { SleepingCat, WalkingCat } from "./cat-svgs";
+import { pickThinkingPun } from "./thinking";
 
 const WALK_MS = 2600;
 
@@ -19,6 +20,7 @@ export function PurrCat() {
   const [state, setState] = useState<CatState>("sleeping");
   const [prompt, setPrompt] = useState<CatPrompt | null>(null);
   const [walkX, setWalkX] = useState(0);
+  const [pun, setPun] = useState("paws for thought…");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(
@@ -38,6 +40,7 @@ export function PurrCat() {
     ).matches;
 
     setPrompt(null);
+    setPun(pickThinkingPun());
     getCatPromptAction()
       .then(setPrompt)
       .catch(() =>
@@ -129,7 +132,7 @@ export function PurrCat() {
               </>
             ) : (
               <p className="text-sm text-plum-400">
-                <span className="cat-thinking">purring up a thought</span>
+                <span className="cat-thinking">{pun}</span>
               </p>
             )}
             {/* bubble tail */}

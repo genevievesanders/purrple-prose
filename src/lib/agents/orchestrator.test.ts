@@ -13,6 +13,22 @@ describe("agent routing", () => {
     ).toBe("editor");
   });
 
+  it("routes structural critique to the Critic", () => {
+    expect(
+      routeTask({ kind: "critique", draft: { title: "T", content: "C" } })
+    ).toBe("critic");
+  });
+
+  it("routes continuity checks to the Continuity keeper", () => {
+    expect(
+      routeTask({
+        kind: "continuity",
+        draft: { title: "T", content: "C" },
+        entryId: "e1",
+      })
+    ).toBe("continuity");
+  });
+
   it("routes brainstorming to the Muse", () => {
     expect(
       routeTask({

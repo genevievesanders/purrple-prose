@@ -1,6 +1,7 @@
 import { prisma } from "./client";
 import { countWords } from "@/lib/words/count";
 import { dailyDelta } from "@/lib/words/daily";
+import { reindexEntry } from "@/lib/agents/memory/store";
 
 /**
  * Entry repository. Every function takes `userId` as its first argument and
@@ -48,7 +49,7 @@ export async function saveEntry(
 ): Promise<{ wordCount: number } | null> {
   const wordCount = countWords(data.content);
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const existing = await tx.entry.findFirst({
       where: { id, userId },
       select: { wordCount: true },
@@ -72,4 +73,16 @@ export async function saveEntry(
 
     return { wordCount };
   });
+
+  if (result) {
+    // Keep the lore bible current. Cheap (hashed embeddings) and best-effort:
+    // an indexing failure must never fail a save.
+    try {
+      await reindexEntry(userId, id, data.content);
+    } catch (err) {
+      console.warn("[lore] reindex failed:", err);
+    }
+  }
+
+  return result;
 }

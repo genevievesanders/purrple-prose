@@ -7,11 +7,12 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 const bodySchema = z.object({
-  kind: z.enum(["review", "brainstorm"]),
+  kind: z.enum(["review", "brainstorm", "critique", "continuity"]),
   draft: z.object({
     title: z.string().max(300),
     content: z.string().max(2_000_000),
   }),
+  entryId: z.string().max(50).optional(), // continuity: exclude this entry
   messages: z
     .array(
       z.object({
@@ -31,11 +32,16 @@ export async function POST(req: NextRequest) {
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) return new Response("Bad request", { status: 400 });
 
-  const { kind, draft, messages } = parsed.data;
-  const task: AgentTask =
-    kind === "review"
-      ? { kind, draft }
-      : { kind, draft, messages: messages ?? [] };
+  const { kind, draft, entryId, messages } = parsed.data;
+  let task: AgentTask;
+  if (kind === "brainstorm") {
+    task = { kind, draft, messages: messages ?? [] };
+  } else if (kind === "continuity") {
+    if (!entryId) return new Response("Bad request", { status: 400 });
+    task = { kind, draft, entryId };
+  } else {
+    task = { kind, draft };
+  }
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({

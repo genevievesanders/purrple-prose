@@ -174,6 +174,7 @@ export function Editor({
 
       {panelOpen && (
         <AgentPanel
+          entryId={id}
           getDraft={() => latest.current}
           onClose={() => setPanelOpen(false)}
         />

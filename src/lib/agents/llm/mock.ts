@@ -29,9 +29,27 @@ What if the thing your character wants most is something they already had and ga
 - What would it cost to ask for it back?
 - What small object could stand in for it on the page?`;
 
+const CONTINUITY_TEXT = `*(mock continuity check — connect Claude for the real keeper)*
+
+**Contradictions**
+
+- None found — though the mock cat only pretends to remember.
+
+**Threads worth keeping**
+
+- The lore bible plumbing is working; retrieved excerpts were attached to this request.`;
+
+const CRITIC_TEXT = `*(mock critique — connect Claude for the real Critic)*
+
+**What this story is doing** — holding a mirror at a slight angle.
+
+**The one thing** — give your protagonist a want that costs something.`;
+
 function responseFor(req: CompletionRequest): string {
   if (req.system.includes("[agent:muse-cat]")) return CAT_PROMPT_JSON;
   if (req.system.includes("[agent:editor]")) return REVIEW_TEXT;
+  if (req.system.includes("[agent:continuity]")) return CONTINUITY_TEXT;
+  if (req.system.includes("[agent:critic]")) return CRITIC_TEXT;
   return BRAINSTORM_TEXT;
 }
 

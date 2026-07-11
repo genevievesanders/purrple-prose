@@ -44,9 +44,27 @@ model Entry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunks EntryChunk[]
 
   @@index([userId, updatedAt(sort: Desc)])
+}
+
+// The "lore bible": embedded chunks of every entry, per-user isolated.
+// Vector ops go through raw SQL (src/lib/agents/memory/store.ts); every
+// query there is scoped by userId.
+model EntryChunk {
+  id        String                 @id @default(cuid())
+  userId    String
+  entryId   String
+  seq       Int
+  text      String
+  embedding Unsupported("vector(384)")
+
+  entry Entry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entryId])
 }
 
 // Words written per user per calendar day (user's local day, computed
