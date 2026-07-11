@@ -16,11 +16,19 @@ import { searchLore, type LoreHit } from "./memory/store";
 
 export type Draft = { title: string; content: string };
 
+export type PaceReport = {
+  targetWords: number;
+  behindBy: number;
+  requiredPace: number;
+  wordsToday: number;
+};
+
 export type AgentTask =
   | { kind: "cat-prompt" }
   | { kind: "review"; draft: Draft }
   | { kind: "critique"; draft: Draft }
   | { kind: "continuity"; draft: Draft; entryId: string }
+  | { kind: "coach-note"; pace: PaceReport }
   | { kind: "brainstorm"; draft: Draft; messages: LLMMessage[] };
 
 export function routeTask(task: AgentTask): AgentKey {
@@ -33,6 +41,8 @@ export function routeTask(task: AgentTask): AgentKey {
       return "critic";
     case "continuity":
       return "continuity";
+    case "coach-note":
+      return "coach";
     case "brainstorm":
       return "muse";
   }
@@ -92,6 +102,18 @@ async function buildMessages(
         {
           role: "user",
           content: `Writer context: ${ctx}\n\nCurrent draft:\n\nTitle: ${task.draft.title}\n\n---\n${excerptDraft(task.draft.content)}\n---\n\nLore bible excerpts from the writer's OTHER stories:\n\n${formatLore(lore)}\n\nCheck the draft against the lore.`,
+        },
+      ];
+    }
+    case "coach-note": {
+      const lore = await searchLore(userId, writingCtx.recentTitles.join(" "), {
+        k: 3,
+      });
+      const { targetWords, behindBy, requiredPace, wordsToday } = task.pace;
+      return [
+        {
+          role: "user",
+          content: `Writer context: ${ctx}\n\nPace report: target ${targetWords.toLocaleString()} words; currently ${behindBy.toLocaleString()} words behind; needs ~${Math.round(requiredPace).toLocaleString()}/day to finish; ${wordsToday} words written today.\n\nGlimpses from their world:\n${formatLore(lore)}\n\nWrite the note for them to find.`,
         },
       ];
     }

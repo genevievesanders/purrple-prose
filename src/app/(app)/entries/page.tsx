@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { requireUserId } from "@/lib/auth";
 import { listEntries } from "@/lib/db/entries";
+import { getUnreadNote } from "@/lib/agents/coach";
 import { createEntryAction } from "./actions";
+import { CoachNoteCard } from "./coach-note-card";
 import { DeleteEntryButton } from "./delete-entry-button";
 
 export const metadata = { title: "Entries · Purrple Prose" };
@@ -16,10 +18,14 @@ function formatDate(d: Date) {
 
 export default async function EntriesPage() {
   const userId = await requireUserId();
-  const items = await listEntries(userId);
+  const [items, note] = await Promise.all([
+    listEntries(userId),
+    getUnreadNote(userId),
+  ]);
 
   return (
     <div>
+      {note && <CoachNoteCard id={note.id} text={note.text} />}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-serif text-2xl text-plum-900">Your stories</h1>
         <form action={createEntryAction}>

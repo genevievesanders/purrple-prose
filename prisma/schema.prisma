@@ -22,6 +22,22 @@ model User {
   entries       Entry[]
   dailyWords    DailyWordCount[]
   milwordyGoals MilwordyGoal[]
+  coachNotes    CoachNote[]
+}
+
+// A note the coach cat leaves when the writer is behind pace — at most one
+// per user per day; unread until the writer opens it.
+model CoachNote {
+  id        String    @id @default(cuid())
+  userId    String
+  date      DateTime  @db.Date
+  text      String
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
 }
 
 // Milwordy: opt-in million-words-a-year challenge. One active goal per

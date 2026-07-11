@@ -7,6 +7,12 @@ import { requireUserId } from "@/lib/auth";
 import * as entries from "@/lib/db/entries";
 import { resolveWritingDate } from "@/lib/words/daily";
 
+export async function markNoteReadAction(id: string) {
+  const userId = await requireUserId();
+  const { markNoteRead } = await import("@/lib/agents/coach");
+  await markNoteRead(userId, id);
+}
+
 export async function createEntryAction() {
   const userId = await requireUserId();
   const entry = await entries.createEntry(userId);

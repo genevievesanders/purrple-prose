@@ -29,6 +29,15 @@ describe("agent routing", () => {
     ).toBe("continuity");
   });
 
+  it("routes coach notes to the Coach", () => {
+    expect(
+      routeTask({
+        kind: "coach-note",
+        pace: { targetWords: 1, behindBy: 1, requiredPace: 1, wordsToday: 0 },
+      })
+    ).toBe("coach");
+  });
+
   it("routes brainstorming to the Muse", () => {
     expect(
       routeTask({

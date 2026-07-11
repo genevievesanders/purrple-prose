@@ -45,7 +45,14 @@ const CRITIC_TEXT = `*(mock critique — connect Claude for the real Critic)*
 
 **The one thing** — give your protagonist a want that costs something.`;
 
+const COACH_TEXT = `*(mock note — connect Claude for the real coach)*
+
+You're a few words behind, but the page doesn't hold grudges. Try this: one sentence about what the lighthouse looks like from the water. Just one.
+
+— 🐾`;
+
 function responseFor(req: CompletionRequest): string {
+  if (req.system.includes("[agent:coach]")) return COACH_TEXT;
   if (req.system.includes("[agent:muse-cat]")) return CAT_PROMPT_JSON;
   if (req.system.includes("[agent:editor]")) return REVIEW_TEXT;
   if (req.system.includes("[agent:continuity]")) return CONTINUITY_TEXT;
