@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { requireUserId } from "@/lib/auth";
 import { listEntries } from "@/lib/db/entries";
-import { createEntryAction, deleteEntryAction } from "./actions";
+import { createEntryAction } from "./actions";
+import { DeleteEntryButton } from "./delete-entry-button";
 
 export const metadata = { title: "Entries · Purrple Prose" };
 
@@ -58,15 +59,7 @@ export default async function EntriesPage() {
                   {formatDate(entry.updatedAt)}
                 </div>
               </Link>
-              <form action={deleteEntryAction.bind(null, entry.id)}>
-                <button
-                  type="submit"
-                  aria-label={`Delete ${entry.title}`}
-                  className="ml-3 rounded-lg px-2 py-1 text-sm text-plum-300 opacity-0 transition hover:bg-rose-50 hover:text-rose-600 group-hover:opacity-100"
-                >
-                  ✕
-                </button>
-              </form>
+              <DeleteEntryButton id={entry.id} title={entry.title} />
             </li>
           ))}
         </ul>

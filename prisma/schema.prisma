@@ -19,8 +19,21 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
 
-  entries    Entry[]
-  dailyWords DailyWordCount[]
+  entries       Entry[]
+  dailyWords    DailyWordCount[]
+  milwordyGoals MilwordyGoal[]
+}
+
+// Milwordy: opt-in million-words-a-year challenge, one goal per calendar year.
+model MilwordyGoal {
+  userId      String
+  year        Int
+  targetWords Int      @default(1000000)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, year])
 }
 
 model Entry {

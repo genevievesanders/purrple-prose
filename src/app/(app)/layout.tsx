@@ -24,6 +24,18 @@ export default async function AppLayout({
             </span>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
+            <Link
+              href="/entries"
+              className="text-plum-700 transition hover:text-plum-900"
+            >
+              Entries
+            </Link>
+            <Link
+              href="/progress"
+              className="text-plum-700 transition hover:text-plum-900"
+            >
+              Progress
+            </Link>
             <span className="text-plum-500">
               {session.user.name ?? session.user.email}
             </span>
