@@ -1,29 +1,38 @@
 /**
- * Milwordy math — pure functions over (goal, words written, date).
- * All dates are treated as calendar days in the user's year; fractions of a
- * day are ignored (day 1 = Jan 1).
+ * Milwordy math — pure functions over (goal, words written, dates).
+ * The challenge runs one year from its start date (anniversary-based, so a
+ * window containing Feb 29 gets 366 days). All dates are YYYY-MM-DD strings
+ * treated as whole calendar days; day 1 is the start date itself.
  */
 
 export type MilwordyStats = {
-  /** Total words written this year so far. */
+  /** Words written inside the challenge window so far. */
   totalWords: number;
+  /** False until the start date arrives. */
+  started: boolean;
+  /** Total days in the challenge window (365 or 366). */
+  totalDays: number;
+  /** Days elapsed, counting today as a full day. 0 if not started. */
+  elapsedDays: number;
+  /** Last day of the challenge, YYYY-MM-DD (exclusive end - 1). */
+  endDate: string;
   /** Words per elapsed day, averaged. */
   pace: number;
   /** Words you "should" have by today for an even pace toward the target. */
   expectedToDate: number;
   /** totalWords - expectedToDate; positive = ahead. */
   aheadBy: number;
-  /** Year-end total if the current pace holds. */
+  /** Window-end total if the current pace holds. */
   projectedTotal: number;
   /**
    * ISO date (YYYY-MM-DD) the target is reached at the current pace.
-   * Null when there is no meaningful date: pace is 0, or the projection
-   * lands beyond the end of next year (see finishBeyondHorizon).
+   * Null when there is no meaningful date: not started, pace is 0, or the
+   * projection lands beyond a year past the challenge end.
    */
   projectedFinish: string | null;
-  /** True when the target won't be reached within this year or the next. */
+  /** True when the target won't be reached within the horizon. */
   finishBeyondHorizon: boolean;
-  /** Words per remaining day needed to hit the target by Dec 31. */
+  /** Words per remaining day needed to hit the target by the end date. */
   requiredPace: number;
   /** 0..1, capped at 1. */
   progress: number;
@@ -37,12 +46,33 @@ export function daysInYear(year: number): number {
   return isLeapYear(year) ? 366 : 365;
 }
 
+function toUTC(date: string): number {
+  const [y, m, d] = date.split("-").map(Number);
+  return Date.UTC(y, m - 1, d);
+}
+
+function toISO(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+/** Whole days from `a` to `b` (positive when b is later). */
+export function daysBetween(a: string, b: string): number {
+  return Math.round((toUTC(b) - toUTC(a)) / 86_400_000);
+}
+
+export function addDays(date: string, days: number): string {
+  return toISO(toUTC(date) + days * 86_400_000);
+}
+
+/** Same date next year (Feb 29 rolls to Mar 1). */
+export function addYears(date: string, years: number): string {
+  const [y, m, d] = date.split("-").map(Number);
+  return toISO(Date.UTC(y + years, m - 1, d));
+}
+
 /** 1-based day of year for a YYYY-MM-DD string. */
 export function dayOfYear(date: string): number {
-  const [y, m, d] = date.split("-").map(Number);
-  const start = Date.UTC(y, 0, 1);
-  const current = Date.UTC(y, m - 1, d);
-  return Math.round((current - start) / 86_400_000) + 1;
+  return daysBetween(`${date.slice(0, 4)}-01-01`, date) + 1;
 }
 
 export function computeMilwordyStats(input: {
@@ -50,35 +80,43 @@ export function computeMilwordyStats(input: {
   totalWords: number;
   /** Today, as YYYY-MM-DD in the user's local time. */
   today: string;
+  /** Challenge start, YYYY-MM-DD. */
+  startDate: string;
 }): MilwordyStats {
-  const { targetWords, totalWords, today } = input;
-  const year = Number(today.slice(0, 4));
-  const totalDays = daysInYear(year);
-  const elapsed = dayOfYear(today); // counts today as a full day
+  const { targetWords, totalWords, today, startDate } = input;
+
+  const endExclusive = addYears(startDate, 1);
+  const totalDays = daysBetween(startDate, endExclusive);
+  const endDate = addDays(endExclusive, -1);
+
+  const started = today >= startDate;
+  const elapsed = started
+    ? Math.min(daysBetween(startDate, today) + 1, totalDays)
+    : 0;
   const remaining = totalDays - elapsed;
 
-  const pace = totalWords / elapsed;
+  const pace = elapsed > 0 ? totalWords / elapsed : 0;
   const expectedToDate = Math.round((targetWords * elapsed) / totalDays);
   const aheadBy = totalWords - expectedToDate;
   const projectedTotal = Math.round(pace * totalDays);
 
-  // A projection past the end of next year is noise, not a date — and
+  // A projection more than a year past the challenge end is noise — and
   // Date.toISOString() switches to "+012333-…" for 5-digit years anyway.
-  const horizon = Date.UTC(year + 1, 11, 31);
+  const horizon = toUTC(addYears(startDate, 2));
   let projectedFinish: string | null = null;
   let finishBeyondHorizon = false;
   if (totalWords >= targetWords) {
     projectedFinish = today;
   } else if (pace > 0) {
     const daysToTarget = Math.ceil(targetWords / pace);
-    const finishMs = Date.UTC(year, 0, daysToTarget);
+    const finishMs = toUTC(startDate) + (daysToTarget - 1) * 86_400_000;
     if (finishMs <= horizon) {
-      projectedFinish = new Date(finishMs).toISOString().slice(0, 10);
+      projectedFinish = toISO(finishMs);
     } else {
       finishBeyondHorizon = true;
     }
-  } else {
-    finishBeyondHorizon = true; // pace 0 and target not reached
+  } else if (started) {
+    finishBeyondHorizon = true; // started, pace 0, target not reached
   }
 
   const requiredPace =
@@ -86,6 +124,10 @@ export function computeMilwordyStats(input: {
 
   return {
     totalWords,
+    started,
+    totalDays,
+    elapsedDays: elapsed,
+    endDate,
     pace,
     expectedToDate,
     aheadBy,

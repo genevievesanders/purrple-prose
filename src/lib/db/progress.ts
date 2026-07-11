@@ -22,24 +22,41 @@ export async function getDailyCounts(
   return counts;
 }
 
-export function getMilwordyGoal(userId: string, year: number) {
-  return prisma.milwordyGoal.findUnique({
-    where: { userId_year: { userId, year } },
+/** Total words in a date window (inclusive), e.g. a milwordy challenge. */
+export async function getWordsInRange(
+  userId: string,
+  from: string, // YYYY-MM-DD
+  to: string
+): Promise<number> {
+  const result = await prisma.dailyWordCount.aggregate({
+    _sum: { words: true },
+    where: {
+      userId,
+      date: {
+        gte: new Date(`${from}T00:00:00Z`),
+        lte: new Date(`${to}T00:00:00Z`),
+      },
+    },
   });
+  return result._sum.words ?? 0;
+}
+
+export function getMilwordyGoal(userId: string) {
+  return prisma.milwordyGoal.findUnique({ where: { userId } });
 }
 
 export function upsertMilwordyGoal(
   userId: string,
-  year: number,
-  targetWords: number
+  data: { targetWords: number; startDate: string } // YYYY-MM-DD
 ) {
+  const startDate = new Date(`${data.startDate}T00:00:00Z`);
   return prisma.milwordyGoal.upsert({
-    where: { userId_year: { userId, year } },
-    create: { userId, year, targetWords },
-    update: { targetWords },
+    where: { userId },
+    create: { userId, targetWords: data.targetWords, startDate },
+    update: { targetWords: data.targetWords, startDate },
   });
 }
 
-export function deleteMilwordyGoal(userId: string, year: number) {
-  return prisma.milwordyGoal.deleteMany({ where: { userId, year } });
+export function deleteMilwordyGoal(userId: string) {
+  return prisma.milwordyGoal.deleteMany({ where: { userId } });
 }

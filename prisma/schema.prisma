@@ -24,16 +24,15 @@ model User {
   milwordyGoals MilwordyGoal[]
 }
 
-// Milwordy: opt-in million-words-a-year challenge, one goal per calendar year.
+// Milwordy: opt-in million-words-a-year challenge. One active goal per
+// user; the challenge runs one year from startDate.
 model MilwordyGoal {
-  userId      String
-  year        Int
+  userId      String   @id
   targetWords Int      @default(1000000)
+  startDate   DateTime @default(now()) @db.Date
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([userId, year])
 }
 
 model Entry {
