@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { logout } from "@/app/(auth)/actions";
+import { PurrCat } from "@/components/cat/purr-cat";
 
 export default async function AppLayout({
   children,
@@ -53,6 +54,7 @@ export default async function AppLayout({
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
         {children}
       </main>
+      <PurrCat />
     </div>
   );
 }

@@ -25,3 +25,125 @@ body {
   background: var(--color-cream-50);
   color: var(--color-plum-900);
 }
+
+/* ── The cat ─────────────────────────────────────────────────────────── */
+
+@keyframes cat-breathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.04);
+  }
+}
+.cat-breathe {
+  animation: cat-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes cat-zzz {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.8);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(1.15);
+  }
+}
+.cat-zzz {
+  animation: cat-zzz 2.4s ease-out infinite;
+}
+
+@keyframes cat-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+.cat-bob {
+  animation: cat-bob 0.45s ease-in-out infinite;
+}
+
+@keyframes cat-leg {
+  0%,
+  100% {
+    transform: rotate(14deg);
+  }
+  50% {
+    transform: rotate(-14deg);
+  }
+}
+.cat-leg {
+  animation: cat-leg 0.45s ease-in-out infinite;
+  transform-origin: top center;
+  transform-box: fill-box;
+}
+.cat-leg-alt {
+  animation: cat-leg 0.45s ease-in-out infinite;
+  animation-delay: -0.225s;
+  transform-origin: top center;
+  transform-box: fill-box;
+}
+
+@keyframes cat-tail {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+.cat-tail {
+  animation: cat-tail 1.6s ease-in-out infinite;
+  transform-origin: left bottom;
+  transform-box: fill-box;
+}
+
+@keyframes cat-bubble-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.cat-bubble {
+  animation: cat-bubble-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: bottom right;
+}
+
+@keyframes cat-thinking {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.cat-thinking {
+  animation: cat-thinking 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cat-breathe,
+  .cat-zzz,
+  .cat-bob,
+  .cat-leg,
+  .cat-leg-alt,
+  .cat-tail,
+  .cat-bubble,
+  .cat-thinking {
+    animation: none;
+  }
+}
