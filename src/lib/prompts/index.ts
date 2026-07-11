@@ -1,12 +1,12 @@
 import type { PromptSource } from "./types";
-import { StubPromptSource } from "./stub";
+import { MusePromptSource } from "./muse";
 
 export type { CatPrompt, PromptContext, PromptSource } from "./types";
 
 /**
- * The active prompt source. Phase 4 swaps this for the Muse agent behind
- * the same interface.
+ * The active prompt source: the Muse agent, which itself falls back to the
+ * canned stub if the LLM is unreachable or returns nonsense.
  */
 export function getPromptSource(): PromptSource {
-  return new StubPromptSource();
+  return new MusePromptSource();
 }

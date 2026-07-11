@@ -26,6 +26,46 @@ body {
   color: var(--color-plum-900);
 }
 
+/* ── Agent panel markdown ────────────────────────────────────────────── */
+
+.prose-panel p {
+  margin: 0.4rem 0;
+}
+.prose-panel ul,
+.prose-panel ol {
+  margin: 0.4rem 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+.prose-panel ol {
+  list-style: decimal;
+}
+.prose-panel li {
+  margin: 0.2rem 0;
+}
+.prose-panel strong {
+  color: var(--color-plum-800);
+}
+.prose-panel h1,
+.prose-panel h2,
+.prose-panel h3 {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  margin: 0.6rem 0 0.2rem;
+}
+.prose-panel blockquote {
+  border-left: 3px solid var(--color-plum-200);
+  padding-left: 0.6rem;
+  color: var(--color-plum-500);
+  font-style: italic;
+}
+.prose-panel code {
+  background: var(--color-plum-100);
+  border-radius: 4px;
+  padding: 0 0.25rem;
+  font-size: 0.85em;
+}
+
 /* ── The cat ─────────────────────────────────────────────────────────── */
 
 @keyframes cat-breathe {

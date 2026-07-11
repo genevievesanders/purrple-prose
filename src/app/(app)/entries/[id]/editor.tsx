@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { countWords } from "@/lib/words/count";
+import { AgentPanel } from "@/components/agent-panel";
 import { saveEntryAction } from "../actions";
 
 const AUTOSAVE_DELAY_MS = 1200;
@@ -37,6 +38,7 @@ export function Editor({
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [status, setStatus] = useState<SaveStatus>("saved");
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const wordCount = useMemo(
     () => (content === initialContent ? initialWordCount : countWords(content)),
@@ -138,9 +140,23 @@ export function Editor({
           aria-label="Entry title"
           className="w-full bg-transparent font-serif text-3xl text-plum-900 outline-none placeholder:text-plum-200"
         />
-        <div className="shrink-0 text-right text-xs text-plum-400">
-          <div>{wordCount.toLocaleString()} words</div>
-          <div aria-live="polite">{STATUS_LABEL[status]}</div>
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="text-right text-xs text-plum-400">
+            <div>{wordCount.toLocaleString()} words</div>
+            <div aria-live="polite">{STATUS_LABEL[status]}</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPanelOpen((v) => !v)}
+            aria-pressed={panelOpen}
+            className={`rounded-xl border px-3 py-1.5 text-sm transition ${
+              panelOpen
+                ? "border-plum-400 bg-plum-100 text-plum-800"
+                : "border-plum-200 text-plum-600 hover:bg-plum-100"
+            }`}
+          >
+            🐾 muse
+          </button>
         </div>
       </div>
 
@@ -155,6 +171,13 @@ export function Editor({
         spellCheck
         className="min-h-[65vh] w-full resize-none bg-transparent font-serif text-lg leading-relaxed text-plum-900 outline-none placeholder:text-plum-200"
       />
+
+      {panelOpen && (
+        <AgentPanel
+          getDraft={() => latest.current}
+          onClose={() => setPanelOpen(false)}
+        />
+      )}
     </div>
   );
 }
