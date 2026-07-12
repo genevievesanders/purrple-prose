@@ -6,7 +6,14 @@ import { PrismaPg } from "@prisma/adapter-pg";
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createClient() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  const connectionString = process.env.DATABASE_URL;
+  // Hosted Postgres (e.g. Neon) needs TLS with proper verification; the
+  // explicit ssl config also silences pg's sslmode=require alias warning.
+  const local = !connectionString || /localhost|127\.0\.0\.1/.test(connectionString);
+  const adapter = new PrismaPg({
+    connectionString,
+    ...(local ? {} : { ssl: { rejectUnauthorized: true } }),
+  });
   return new PrismaClient({ adapter });
 }
 
