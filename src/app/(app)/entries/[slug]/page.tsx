@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
-import { getEntry } from "@/lib/db/entries";
+import { getEntryBySlugOrId } from "@/lib/db/entries";
 import { Editor } from "./editor";
 
 export const metadata = { title: "Writing · Purrple Prose" };
@@ -8,11 +8,11 @@ export const metadata = { title: "Writing · Purrple Prose" };
 export default async function EntryPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
   const userId = await requireUserId();
-  const entry = await getEntry(userId, id);
+  const entry = await getEntryBySlugOrId(userId, decodeURIComponent(slug));
   if (!entry) notFound();
 
   return (
@@ -21,6 +21,8 @@ export default async function EntryPage({
       initialTitle={entry.title}
       initialContent={entry.content}
       initialWordCount={entry.wordCount}
+      initialTags={entry.tags}
+      initialSlug={entry.slug}
     />
   );
 }

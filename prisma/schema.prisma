@@ -55,7 +55,11 @@ model Entry {
   id        String   @id @default(cuid())
   userId    String
   title     String   @default("Untitled")
+  // URL slug derived from the title on save; null until first titled save
+  // (routes fall back to the id). Unique per user, collision-suffixed.
+  slug      String?
   content   String   @default("")
+  tags      String[] @default([])
   wordCount Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -63,6 +67,7 @@ model Entry {
   user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   chunks EntryChunk[]
 
+  @@unique([userId, slug])
   @@index([userId, updatedAt(sort: Desc)])
 }
 

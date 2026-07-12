@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { countWords } from "@/lib/words/count";
+import { tagsToInput } from "@/lib/entries/tags";
 import { AgentPanel } from "@/components/agent-panel";
 import { saveEntryAction } from "../actions";
 
@@ -29,16 +30,22 @@ export function Editor({
   initialTitle,
   initialContent,
   initialWordCount,
+  initialTags,
+  initialSlug,
 }: {
   id: string;
   initialTitle: string;
   initialContent: string;
   initialWordCount: number;
+  initialTags: string[];
+  initialSlug: string | null;
 }) {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
+  const [tagsInput, setTagsInput] = useState(() => tagsToInput(initialTags));
   const [status, setStatus] = useState<SaveStatus>("saved");
   const [panelOpen, setPanelOpen] = useState(false);
+  const currentSlug = useRef(initialSlug);
 
   const wordCount = useMemo(
     () => (content === initialContent ? initialWordCount : countWords(content)),
@@ -48,13 +55,25 @@ export function Editor({
   // Refs so the debounced save always sees the latest values without
   // re-creating timers on every keystroke. Synced after render (the
   // autosave debounce is far longer than a render pass).
-  const latest = useRef({ title, content });
+  const latest = useRef({ title, content, tagsInput });
   useEffect(() => {
-    latest.current = { title, content };
-  }, [title, content]);
-  const lastSaved = useRef({ title: initialTitle, content: initialContent });
+    latest.current = { title, content, tagsInput };
+  }, [title, content, tagsInput]);
+  const lastSaved = useRef({
+    title: initialTitle,
+    content: initialContent,
+    tagsInput: tagsToInput(initialTags),
+  });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saving = useRef(false);
+
+  function isDirty(): boolean {
+    return (
+      latest.current.title !== lastSaved.current.title ||
+      latest.current.content !== lastSaved.current.content ||
+      latest.current.tagsInput !== lastSaved.current.tagsInput
+    );
+  }
 
   function schedule() {
     if (timer.current) clearTimeout(timer.current);
@@ -64,10 +83,7 @@ export function Editor({
   async function save() {
     if (saving.current) return; // in-flight save re-checks when done
     const snapshot = { ...latest.current };
-    if (
-      snapshot.title === lastSaved.current.title &&
-      snapshot.content === lastSaved.current.content
-    ) {
+    if (!isDirty()) {
       setStatus("saved");
       return;
     }
@@ -79,15 +95,19 @@ export function Editor({
         id,
         title: snapshot.title,
         content: snapshot.content,
+        tagsInput: snapshot.tagsInput,
         clientDate: localDateString(),
       });
       if (result.ok) {
         lastSaved.current = snapshot;
+        // Keep the address bar on the entry's slug as the title changes.
+        const target = result.slug ?? id;
+        if (target !== currentSlug.current) {
+          currentSlug.current = target;
+          window.history.replaceState(null, "", `/entries/${target}`);
+        }
         // If the user kept typing during the save, go around again.
-        if (
-          latest.current.title !== snapshot.title ||
-          latest.current.content !== snapshot.content
-        ) {
+        if (isDirty()) {
           setStatus("unsaved");
           schedule();
         } else {
@@ -113,12 +133,7 @@ export function Editor({
   // Warn before closing with unsaved changes; clear timer on unmount.
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
-      if (
-        latest.current.title !== lastSaved.current.title ||
-        latest.current.content !== lastSaved.current.content
-      ) {
-        e.preventDefault();
-      }
+      if (isDirty()) e.preventDefault();
     };
     window.addEventListener("beforeunload", handler);
     return () => {
@@ -129,7 +144,7 @@ export function Editor({
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-4 flex items-baseline justify-between gap-4">
+      <div className="mb-1 flex items-baseline justify-between gap-4">
         <input
           value={title}
           onChange={(e) => {
@@ -159,6 +174,18 @@ export function Editor({
           </button>
         </div>
       </div>
+
+      <input
+        value={tagsInput}
+        onChange={(e) => {
+          setTagsInput(e.target.value);
+          onEdit();
+        }}
+        placeholder="#tags — like #fiction #wip"
+        aria-label="Entry tags"
+        spellCheck={false}
+        className="mb-4 w-full bg-transparent text-sm text-plum-500 outline-none placeholder:text-plum-200"
+      />
 
       <textarea
         value={content}
